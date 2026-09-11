@@ -64,6 +64,25 @@
 		showToast.timer = setTimeout(() => toast.classList.remove('visible'), 2600);
 	};
 
+	const setupTheme = () => {
+		const savedTheme = storage.get('joni-theme', 'light');
+		const applyTheme = (theme) => {
+			document.documentElement.dataset.theme = theme;
+			document.querySelectorAll('.theme-toggle').forEach((button) => {
+				const dark = theme === 'dark';
+				button.textContent = dark ? '☀' : '☾';
+				button.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
+				button.setAttribute('aria-pressed', String(dark));
+			});
+		};
+		applyTheme(savedTheme === 'dark' ? 'dark' : 'light');
+		document.querySelectorAll('.theme-toggle').forEach((button) => button.addEventListener('click', () => {
+			const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+			storage.set('joni-theme', theme);
+			applyTheme(theme);
+		}));
+	};
+
 	const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]));
 
 	const productName = (card) => card.dataset.productName || card.querySelector('h2')?.textContent.trim();
@@ -357,6 +376,7 @@
 		renderMetrics(); renderProducts(); renderOrders();
 	};
 
+	setupTheme();
 	setupNavigation();
 	setupCarousel();
 	setupStoreCatalog();
