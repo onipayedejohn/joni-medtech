@@ -2570,6 +2570,23 @@ body,
 }
 
 
+.theme-icon,
+.theme-icon svg {
+    display: block;
+    width: 19px;
+    height: 19px;
+}
+
+
+.theme-icon svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+}
+
+
 html[data-theme="dark"] body {
     background-color: #151a19;
     color: #e5ebe8;
