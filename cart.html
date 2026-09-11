@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="Review your Joni Medtech Supply order and complete checkout.">
+	<link rel="stylesheet" href="style.css">
+	<script src="script.js" defer></script>
+	<title>Your Cart | Joni Medtech Supply</title>
+</head>
+<body class="commerce-page">
+	<header class="site-header">
+		<div class="header-container">
+			<a href="index.html" class="brand-logo" aria-label="Joni Medtech Supply home">
+				<div class="logo-symbol">⚕</div>
+				<div class="brand-text"><span class="brand-name">JONI</span><span class="brand-subtitle">MEDTECH SUPPLY</span></div>
+			</a>
+			<nav class="main-nav" aria-label="Main navigation"><ul>
+				<li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="shop.html">Shop</a></li><li><a href="contact.html">Contact</a></li>
+			</ul></nav>
+			<div class="header-actions">
+				<a href="wishlist.html" class="header-icon-link" title="Wishlist" aria-label="Wishlist">♡<span class="header-badge wishlist-count">0</span></a>
+				<a href="cart.html" class="header-icon-link" title="Shopping Cart" aria-label="Shopping Cart">🛒<span class="header-badge cart-count">0</span></a>
+			</div>
+		</div>
+	</header>
+	<main class="commerce-main">
+		<div class="commerce-heading"><div><span class="section-label">ORDER REVIEW</span><h1>Your Cart</h1><p>Review your items, adjust quantities, and continue to secure checkout.</p></div><a class="secondary-action" href="shop.html">Continue shopping</a></div>
+		<section class="cart-layout" aria-label="Cart and checkout">
+			<div class="cart-panel"><div id="cartPageItems"></div></div>
+			<aside class="order-summary" id="orderSummary"></aside>
+		</section>
+		<section class="checkout-panel" id="checkoutPanel" hidden>
+			<div class="checkout-heading"><span class="section-label">SECURE CHECKOUT</span><h2>Complete your order</h2><p>We will use these details to confirm availability and arrange delivery.</p></div>
+			<form id="checkoutForm" class="checkout-form">
+				<div class="checkout-fields"><label>Full name<input name="name" autocomplete="name" required></label><label>Email address<input type="email" name="email" autocomplete="email" required></label><label>Phone number<input type="tel" name="phone" autocomplete="tel" required></label><label>Delivery location<input name="location" autocomplete="street-address" required></label></div>
+				<label>Order notes <textarea name="notes" rows="4" placeholder="Optional delivery or product notes"></textarea></label>
+				<div class="checkout-actions"><button class="primary-action" type="submit">Place order</button><button class="text-action" type="button" id="cancelCheckout">Back to cart</button></div>
+			</form>
+		</section>
+		<section class="order-confirmation" id="orderConfirmation" hidden></section>
+	</main>
+	<footer><div class="footer-container"><div class="footer-brand"><h3>Joni Medtech Supply</h3><p>Your trusted source for medical laboratory supplies, consumables, diagnostic products, and laboratory equipment.</p></div><div class="footer-links"><h3>Quick Links</h3><a href="index.html">Home</a><a href="about.html">About</a><a href="shop.html">Shop</a><a href="wishlist.html">Wishlist</a></div><div class="footer-contact"><h3>Contact</h3><a href="tel:+233249698992">☎ +233 24 969 8992</a><a href="https://wa.me/233249698992" target="_blank" rel="noopener">WhatsApp</a><a href="mailto:onipayedejohn11@gmail.com">✉ onipayedejohn11@gmail.com</a><span class="location-animation">⌖ Obuasi, Ashanti Region, Ghana</span></div></div><div class="footer-bottom"><p>&copy; 2026 Joni Medtech. All rights reserved.</p></div></footer>
+</body>
+</html>
