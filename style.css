@@ -2102,3 +2102,428 @@ footer {
     }
 
 }
+
+
+/* =========================================================
+   29. ADMIN CONSOLE
+   ========================================================= */
+
+.admin-page {
+    background: #eef2f0;
+}
+
+
+.admin-header {
+    min-height: 72px;
+    padding: 10px 4vw;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    background: #31312f;
+}
+
+
+.admin-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    color: #ffffff;
+    font-size: 14px;
+}
+
+
+.admin-header-actions button,
+.import-button {
+    padding: 9px 13px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 5px;
+    background: transparent;
+    color: #ffffff;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+
+.import-button input {
+    display: none;
+}
+
+
+.admin-main {
+    width: 92%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 48px 0 80px;
+}
+
+
+.admin-heading,
+.admin-view-heading,
+.admin-list-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+
+.admin-heading {
+    margin-bottom: 30px;
+}
+
+
+.admin-heading h1 {
+    margin: 5px 0;
+    color: #31312f;
+    font-size: clamp(30px, 5vw, 46px);
+}
+
+
+.admin-heading p,
+.admin-view-heading p {
+    color: #66706c;
+}
+
+
+.admin-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid #c9ddd0;
+    border-radius: 20px;
+    background: #f5fbf3;
+    color: #226b3a;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+
+.admin-status i {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #28a745;
+}
+
+
+.admin-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 28px;
+}
+
+
+.admin-metric,
+.admin-card {
+    border: 1px solid #dfe7e3;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 5px 18px rgba(33, 52, 43, 0.05);
+}
+
+
+.admin-metric {
+    padding: 18px;
+}
+
+
+.admin-metric span,
+.admin-metric small {
+    display: block;
+    color: #66706c;
+    font-size: 12px;
+}
+
+
+.admin-metric strong {
+    display: block;
+    margin: 4px 0;
+    color: #31312f;
+    font-size: 29px;
+}
+
+
+.admin-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #d5dfda;
+}
+
+
+.admin-tab {
+    padding: 12px 17px;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    background: transparent;
+    color: #66706c;
+    font-weight: 700;
+}
+
+
+.admin-tab.active {
+    border-bottom-color: #087e8b;
+    color: #087e8b;
+}
+
+
+.admin-view {
+    display: none;
+}
+
+
+.admin-view.active {
+    display: block;
+}
+
+
+.admin-view-heading {
+    align-items: flex-end;
+    margin-bottom: 18px;
+}
+
+
+.admin-view-heading h2 {
+    margin-bottom: 4px;
+    color: #31312f;
+    font-size: 25px;
+}
+
+
+.admin-product-layout {
+    display: grid;
+    grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.5fr);
+    gap: 20px;
+}
+
+
+.admin-card {
+    padding: 22px;
+}
+
+
+.admin-card h3 {
+    margin-bottom: 17px;
+    color: #31312f;
+}
+
+
+.admin-form {
+    display: grid;
+    align-content: start;
+    gap: 14px;
+}
+
+
+.admin-form label {
+    display: grid;
+    gap: 6px;
+    color: #31312f;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+
+.admin-form input,
+.admin-form textarea,
+.admin-list-toolbar input {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid #d5dfda;
+    border-radius: 5px;
+    background: #ffffff;
+    outline: 0;
+    font: inherit;
+    font-weight: 400;
+}
+
+
+.admin-form textarea {
+    resize: vertical;
+}
+
+
+.admin-form small {
+    margin-top: -7px;
+    color: #66706c;
+    font-size: 11px;
+}
+
+
+.admin-form-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+
+.admin-form-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+
+.admin-list-toolbar {
+    margin-bottom: 14px;
+}
+
+
+.admin-list-toolbar h3 {
+    margin: 0;
+}
+
+
+.admin-list-toolbar input {
+    max-width: 240px;
+}
+
+
+.admin-product-list,
+.admin-order-list {
+    display: grid;
+}
+
+
+.admin-product-row,
+.admin-order-row {
+    display: grid;
+    align-items: center;
+    gap: 14px;
+    padding: 13px 0;
+    border-bottom: 1px solid #eef0ef;
+}
+
+
+.admin-product-row {
+    grid-template-columns: 52px minmax(0, 1fr) auto;
+}
+
+
+.admin-order-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
+
+.admin-product-row:last-child,
+.admin-order-row:last-child {
+    border-bottom: 0;
+}
+
+
+.admin-product-row img {
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+    border-radius: 5px;
+    background: #f4f8f6;
+}
+
+
+.admin-product-row strong,
+.admin-product-row span,
+.admin-order-row span,
+.admin-order-row small {
+    display: block;
+}
+
+
+.admin-product-row span,
+.admin-order-row span,
+.admin-order-row small {
+    color: #66706c;
+    font-size: 12px;
+}
+
+
+.admin-order-row small {
+    margin-top: 4px;
+}
+
+
+.admin-row-actions {
+    display: flex;
+    gap: 12px;
+}
+
+
+.admin-empty {
+    padding: 25px 0;
+    color: #66706c;
+    text-align: center;
+}
+
+
+.admin-danger-zone {
+    margin-top: 20px;
+}
+
+
+.admin-danger-zone p {
+    max-width: 700px;
+    margin-bottom: 14px;
+    color: #66706c;
+    font-size: 13px;
+}
+
+
+.admin-page .site-toast {
+    z-index: 2200;
+}
+
+
+@media screen and (max-width: 800px) {
+
+    .admin-header,
+    .admin-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+
+    .admin-header-actions {
+        flex-wrap: wrap;
+    }
+
+
+    .admin-metrics {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+
+    .admin-product-layout {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+
+@media screen and (max-width: 500px) {
+
+    .admin-main {
+        width: 94%;
+        padding-top: 30px;
+    }
+
+
+    .admin-metrics,
+    .admin-form-row {
+        grid-template-columns: 1fr;
+    }
+
+
+    .admin-view-heading,
+    .admin-list-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+
+    .admin-list-toolbar input {
+        max-width: none;
+    }
+
+}

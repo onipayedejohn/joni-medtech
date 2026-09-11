@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="Joni Medtech Supply store administration.">
+	<link rel="stylesheet" href="style.css">
+	<script src="script.js" defer></script>
+	<title>Admin Console | Joni Medtech Supply</title>
+</head>
+<body class="admin-page">
+	<header class="admin-header"><a href="index.html" class="brand-logo"><div class="logo-symbol">⚕</div><div class="brand-text"><span class="brand-name">JONI</span><span class="brand-subtitle">ADMIN CONSOLE</span></div></a><div class="admin-header-actions"><a href="shop.html">View store</a><button type="button" id="exportStore">Export data</button><label class="import-button">Import data<input type="file" id="importStore" accept="application/json"></label></div></header>
+	<main class="admin-main">
+		<div class="admin-heading"><div><span class="section-label">STORE OPERATIONS</span><h1>Manage your website</h1><p>Products, orders, and store settings are saved in this browser.</p></div><span class="admin-status"><i></i> Local workspace</span></div>
+		<section class="admin-metrics" id="adminMetrics" aria-label="Store overview"></section>
+		<div class="admin-tabs" role="tablist" aria-label="Admin sections"><button class="admin-tab active" data-admin-tab="products" role="tab">Products</button><button class="admin-tab" data-admin-tab="orders" role="tab">Orders</button><button class="admin-tab" data-admin-tab="settings" role="tab">Site settings</button></div>
+		<section class="admin-view active" data-admin-view="products"><div class="admin-view-heading"><div><h2>Product catalogue</h2><p>Add new products or update the details customers see in the shop.</p></div><button type="button" class="primary-action" id="newProduct">＋ Add product</button></div><div class="admin-product-layout"><form class="admin-form admin-card" id="productForm"><input type="hidden" name="editingName"><h3 id="productFormTitle">Add a product</h3><label>Product name<input name="name" required placeholder="e.g. Laboratory Refrigerator"></label><label>Image path<input name="image" required placeholder="images/product-name.jfif"><small>Use a file path inside the website, such as <b>images/example.jfif</b>.</small></label><div class="admin-form-row"><label>Price (GH₵)<input name="price" type="number" min="0" step="0.01" required></label><label>Stock<input name="stock" type="number" min="0" step="1" required></label></div><label>Description<textarea name="description" rows="4" required placeholder="Short customer-facing product description"></textarea></label><div class="admin-form-actions"><button type="submit" class="primary-action">Save product</button><button type="button" class="text-action" id="cancelProductEdit" hidden>Cancel edit</button></div></form><div class="admin-card"><div class="admin-list-toolbar"><h3>All products</h3><input id="adminProductSearch" type="search" placeholder="Search products" aria-label="Search products"></div><div id="adminProductList" class="admin-product-list"></div></div></div></section>
+		<section class="admin-view" data-admin-view="orders"><div class="admin-view-heading"><div><h2>Customer orders</h2><p>Review order enquiries submitted through checkout on this browser.</p></div><button type="button" class="text-action" id="clearOrders">Clear order history</button></div><div class="admin-card" id="adminOrderList"></div></section>
+		<section class="admin-view" data-admin-view="settings"><div class="admin-view-heading"><div><h2>Site settings</h2><p>Update the storefront contact details and homepage messaging.</p></div></div><form class="admin-form admin-card" id="settingsForm"><div class="admin-form-row"><label>Business name<input name="businessName" required></label><label>Phone number<input name="phone" required></label></div><div class="admin-form-row"><label>Email address<input name="email" type="email" required></label><label>Location<input name="location" required></label></div><label>Homepage announcement<input name="announcement" placeholder="Optional message for your team"></label><button type="submit" class="primary-action">Save settings</button></form><div class="admin-card admin-danger-zone"><h3>Data management</h3><p>Export a JSON backup before moving this store to a server or another device. Importing replaces locally saved product, order, and setting data.</p><button type="button" class="text-action" id="resetStore">Reset local store data</button></div></section>
+	</main>
+	<div class="site-toast" id="adminToast" role="status" aria-live="polite"></div>
+</body>
+</html>
