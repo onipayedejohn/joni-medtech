@@ -52,6 +52,20 @@ button {
 }
 
 
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+    outline: 3px solid #087e8b;
+    outline-offset: 3px;
+}
+
+
+[hidden] {
+    display: none !important;
+}
+
+
 /* =========================================================
    2. HEADER
    ========================================================= */
@@ -1003,7 +1017,129 @@ main {
 
 
 /* =========================================================
-   23. ABOUT PAGE
+   23. CART DRAWER AND FEEDBACK
+   ========================================================= */
+
+.site-toast {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 2000;
+    max-width: min(360px, calc(100vw - 32px));
+    padding: 13px 17px;
+    border-radius: 6px;
+    background: #31312f;
+    color: #ffffff;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(12px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+
+.site-toast.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+
+.cart-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 1500;
+    width: min(420px, 100vw);
+    height: 100vh;
+    padding: 24px;
+    overflow-y: auto;
+    background: #ffffff;
+    box-shadow: -8px 0 30px rgba(0, 0, 0, 0.18);
+    transform: translateX(105%);
+    transition: transform 0.25s ease;
+}
+
+
+.cart-drawer.open {
+    transform: translateX(0);
+}
+
+
+.cart-drawer-header,
+.cart-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+
+.cart-drawer-header {
+    padding-bottom: 18px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+
+.cart-drawer-header h2 {
+    color: #31312f;
+}
+
+
+.cart-close {
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 50%;
+    background: #f1f5f4;
+    color: #31312f;
+    font-size: 24px;
+}
+
+
+.cart-items {
+    display: grid;
+    gap: 15px;
+    padding-top: 18px;
+}
+
+
+.cart-row {
+    align-items: flex-start;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eef0ef;
+}
+
+
+.cart-row span {
+    flex: 1;
+    color: #333;
+    font-size: 14px;
+}
+
+
+.cart-row button {
+    border: 0;
+    background: transparent;
+    color: #b42318;
+    font-size: 12px;
+}
+
+
+.cart-empty,
+.empty-products {
+    padding: 28px 12px;
+    color: #666;
+    text-align: center;
+}
+
+
+.empty-products {
+    grid-column: 1 / -1;
+}
+
+
+/* =========================================================
+    24. ABOUT PAGE
    ========================================================= */
 
 .about-section {
@@ -1061,7 +1197,7 @@ main {
 
 
 /* =========================================================
-   24. CONTACT PAGE
+    25. CONTACT PAGE
    ========================================================= */
 
 .contact-section {
@@ -1198,7 +1334,7 @@ main {
 
 
 /* =========================================================
-   25. FOOTER
+    26. FOOTER
    ========================================================= */
 
 footer {
@@ -1271,7 +1407,7 @@ footer {
 
 
 /* =========================================================
-   26. LOCATION ANIMATION ONLY
+    27. LOCATION ANIMATION ONLY
    ========================================================= */
 
 .location-animation {
@@ -1315,7 +1451,7 @@ footer {
 
 
 /* =========================================================
-   27. RESPONSIVE DESIGN
+    28. RESPONSIVE DESIGN
    ========================================================= */
 
 @media screen and (max-width: 1100px) {
@@ -1533,6 +1669,35 @@ footer {
     .footer-container {
         grid-template-columns:
             1fr;
+    }
+
+
+    .site-toast {
+        right: 16px;
+        bottom: 16px;
+    }
+
+
+    .cart-drawer {
+        padding: 18px;
+    }
+
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+
+    html {
+        scroll-behavior: auto;
+    }
+
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
 
 }
