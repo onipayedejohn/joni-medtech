@@ -2971,6 +2971,13 @@ html[data-theme="dark"] .admin-page {
 }
 
 
+.chart-empty-label {
+    fill: #87958f !important;
+    font-size: 14px !important;
+    font-weight: 600;
+}
+
+
 .chart-grid path {
     fill: none;
     stroke: #e4ebe7;
