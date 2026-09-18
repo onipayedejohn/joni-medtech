@@ -71,7 +71,7 @@
 			document.querySelectorAll('.theme-toggle').forEach((button) => {
 				const dark = theme === 'dark';
 				button.querySelector('.theme-icon').innerHTML = dark
-					? '<svg viewBox="0 0 24 24" role="img" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>'
+					? '<svg viewBox="0 0 24 24" role="img" aria-hidden="true"><path d="M12 2v3M12 19v3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M2 12h3M19 12h3M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"></path></svg>'
 					: '<svg viewBox="0 0 24 24" role="img" aria-hidden="true"><path d="M20.5 14.7A8.5 8.5 0 0 1 9.3 3.5 8.5 8.5 0 1 0 20.5 14.7Z"></path></svg>';
 				button.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
 				button.setAttribute('aria-pressed', String(dark));
