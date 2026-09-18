@@ -47,9 +47,10 @@
 	};
 	const savedProducts = storage.get('joni-products', []);
 	const defaultSettings = { businessName: 'Joni Medtech Supply', phone: '+233 24 969 8992', email: 'onipayedejohn11@gmail.com', location: 'Obuasi, Ashanti Region, Ghana', announcement: '' };
-	const productCatalog = Object.fromEntries(Object.entries(catalog).map(([name, [image, price]]) => [name, { name, image, price, description: '', stock: 10 }]));
+	const productCatalog = Object.fromEntries(Object.entries(catalog).map(([name, [image, price]]) => [name, { name, image, price, originalPrice: price, discountPercent: 0, description: '', stock: 10 }]));
 	savedProducts.forEach((product) => { if (product.name) productCatalog[product.name] = { ...productCatalog[product.name], ...product }; });
 	const formatMoney = (amount) => `GH₵${amount.toLocaleString('en-GH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+	const discountPercent = (product) => { const original = Number(product.originalPrice || product.price); const sale = Number(product.price); return Number(product.discountPercent) > 0 ? Number(product.discountPercent) : original > sale ? ((original - sale) / original) * 100 : 0; };
 	const supabaseClient = window.supabaseClient;
 	let productCards = [];
 	const toast = document.createElement('div');
@@ -166,6 +167,12 @@
 			card.querySelector('h2').textContent = product.name;
 			card.querySelector('.product-description').textContent = product.description || card.querySelector('.product-description').textContent.trim();
 			card.querySelector('.discount-price').textContent = formatMoney(Number(product.price));
+			const original = Number(product.originalPrice || product.price);
+			const percent = discountPercent(product);
+			card.querySelector('.original-price').textContent = original > Number(product.price) ? formatMoney(original) : '';
+			card.querySelector('.original-price').hidden = original <= Number(product.price);
+			card.querySelector('.discount-badge').textContent = percent > 0 ? `↓ ${Math.round(percent)}%` : '';
+			card.querySelector('.discount-badge').hidden = percent <= 0;
 			card.querySelector('.stock-text').textContent = `${Number(product.stock) || 0} items left`;
 			card.querySelector('.stock-bar').style.width = `${Math.min(100, Math.max(5, Number(product.stock) * 3))}%`;
 		});
@@ -173,7 +180,9 @@
 			const card = document.createElement('article');
 			card.className = 'product-item';
 			card.dataset.productName = product.name;
-			card.innerHTML = `<div class="product-image-wrapper"><img src="${product.image}" alt="${product.name}"><button class="wishlist-button" type="button" aria-label="Add ${product.name} to wishlist">♡</button></div><h2>${product.name}</h2><p class="product-description">${product.description || 'Medical laboratory product supplied by Joni Medtech Supply.'}</p><div class="product-price"><span class="discount-price">${formatMoney(Number(product.price))}</span></div><div class="stock-info"><span class="stock-text">${Number(product.stock) || 0} items left</span><div class="stock-progress"><span class="stock-bar stock-high" style="width: ${Math.min(100, Math.max(5, Number(product.stock) * 3))}%;"></span></div></div><button class="add-cart-button" type="button">Add to Cart</button>`;
+			const original = Number(product.originalPrice || product.price);
+			const percent = discountPercent(product);
+			card.innerHTML = `<div class="product-image-wrapper"><img src="${product.image}" alt="${product.name}"><span class="discount-badge"${percent > 0 ? '' : ' hidden'}>↓ ${Math.round(percent)}%</span><button class="wishlist-button" type="button" aria-label="Add ${product.name} to wishlist">♡</button></div><h2>${product.name}</h2><p class="product-description">${product.description || 'Medical laboratory product supplied by Joni Medtech Supply.'}</p><div class="product-price"><span class="discount-price">${formatMoney(Number(product.price))}</span><span class="original-price"${original > Number(product.price) ? '' : ' hidden'}>${formatMoney(original)}</span></div><div class="stock-info"><span class="stock-text">${Number(product.stock) || 0} items left</span><div class="stock-progress"><span class="stock-bar stock-high" style="width: ${Math.min(100, Math.max(5, Number(product.stock) * 3))}%;"></span></div></div><button class="add-cart-button" type="button">Add to Cart</button>`;
 			productList.append(card);
 		});
 		productCards = [...productList.querySelectorAll('.product-item')];
@@ -181,13 +190,13 @@
 
 	const syncSupabaseProducts = async () => {
 		if (!supabaseClient || sessionStorage.getItem('joni-supabase-products-synced')) return;
-		const { data, error } = await supabaseClient.from('products').select('name, description, image_path, price, stock').eq('is_active', true);
+		const { data, error } = await supabaseClient.from('products').select('name, description, image_path, price, original_price, discount_percent, stock').eq('is_active', true);
 		if (error) {
 			console.warn('Supabase product sync failed; local catalogue remains active.', error.message);
 			return;
 		}
 		if (data?.length) {
-			storage.set('joni-products', data.map((product) => ({ name: product.name, description: product.description, image: product.image_path, price: Number(product.price), stock: Number(product.stock) })));
+			storage.set('joni-products', data.map((product) => ({ name: product.name, description: product.description, image: product.image_path, price: Number(product.price), originalPrice: Number(product.original_price || product.price), discountPercent: Number(product.discount_percent || 0), stock: Number(product.stock) })));
 		}
 		sessionStorage.setItem('joni-supabase-products-synced', 'true');
 		if (data?.length) location.reload();
@@ -449,13 +458,19 @@
 		const renderProducts = () => {
 			const query = document.querySelector('#adminProductSearch').value.trim().toLowerCase();
 			const overriddenNames = new Set(products.map((product) => product.name));
-			const merged = [...Object.keys(catalog).filter((name) => !overriddenNames.has(name)).map((name) => ({ name, image: catalog[name][0], price: catalog[name][1], description: '', stock: 10, builtIn: true })), ...products.map((product) => ({ ...product, builtIn: false }))].filter((product) => product.name.toLowerCase().includes(query));
-			productList.innerHTML = merged.map((product) => `<article class="admin-product-row"><img src="${escapeHtml(product.image)}" alt=""><div><strong>${escapeHtml(product.name)}</strong><span>${formatMoney(Number(product.price))} · ${Number(product.stock) || 0} in stock</span></div><div class="admin-row-actions"><button type="button" class="text-action admin-edit" data-product="${escapeHtml(product.name)}">Edit</button>${product.builtIn ? '' : `<button type="button" class="text-action admin-delete" data-product="${escapeHtml(product.name)}">Delete</button>`}</div></article>`).join('') || '<p class="admin-empty">No matching products.</p>';
+			const merged = [...Object.keys(catalog).filter((name) => !overriddenNames.has(name)).map((name) => ({ name, image: catalog[name][0], price: catalog[name][1], originalPrice: catalog[name][1], discountPercent: 0, description: '', stock: 10, builtIn: true })), ...products.map((product) => ({ ...product, builtIn: false }))].filter((product) => product.name.toLowerCase().includes(query));
+			productList.innerHTML = merged.map((product) => { const original = Number(product.originalPrice || product.price); const sale = Number(product.price); const percent = discountPercent(product); const priceLabel = original > sale ? `<del>${formatMoney(original)}</del> ${formatMoney(sale)} <em>-${Math.round(percent)}%</em>` : formatMoney(sale); return `<article class="admin-product-row"><img src="${escapeHtml(product.image)}" alt=""><div><strong>${escapeHtml(product.name)}</strong><span>${priceLabel} · ${Number(product.stock) || 0} in stock</span></div><div class="admin-row-actions"><button type="button" class="text-action admin-edit" data-product="${escapeHtml(product.name)}">Edit</button>${product.builtIn ? '' : `<button type="button" class="text-action admin-delete" data-product="${escapeHtml(product.name)}">Delete</button>`}</div></article>`; }).join('') || '<p class="admin-empty">No matching products.</p>';
 			productList.querySelectorAll('.admin-edit').forEach((button) => button.addEventListener('click', () => editProduct(button.dataset.product)));
 			productList.querySelectorAll('.admin-delete').forEach((button) => button.addEventListener('click', () => { if (!window.confirm(`Delete ${button.dataset.product}?`)) return; products = products.filter((product) => product.name !== button.dataset.product); storage.set('joni-products', products); renderProducts(); renderMetrics(); notify('Product deleted'); }));
 		};
-		const editProduct = (name) => { const product = products.find((item) => item.name === name) || { ...productCatalog[name], name }; Object.entries(product).forEach(([key, value]) => { if (productForm.elements[key]) productForm.elements[key].value = value ?? ''; }); productForm.elements.editingName.value = name; document.querySelector('#productFormTitle').textContent = `Edit ${name}`; document.querySelector('#cancelProductEdit').hidden = false; productForm.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
-		productForm.addEventListener('submit', (event) => { event.preventDefault(); const data = Object.fromEntries(new FormData(productForm)); const product = { name: data.name.trim(), image: data.image.trim(), price: Number(data.price), stock: Number(data.stock), description: data.description.trim() }; if (!product.name || !product.image || product.price < 0 || product.stock < 0) return; const index = products.findIndex((item) => item.name === data.editingName); index >= 0 ? products.splice(index, 1, product) : products.push(product); storage.set('joni-products', products); productForm.reset(); productForm.elements.editingName.value = ''; document.querySelector('#productFormTitle').textContent = 'Add a product'; document.querySelector('#cancelProductEdit').hidden = true; renderProducts(); renderMetrics(); notify('Product saved'); });
+		const editProduct = (name) => { const product = products.find((item) => item.name === name) || { ...productCatalog[name], name }; const formProduct = { ...product, originalPrice: product.originalPrice || product.price, discountPercent: discountPercent(product) }; Object.entries(formProduct).forEach(([key, value]) => { if (productForm.elements[key]) productForm.elements[key].value = value ?? ''; }); productForm.elements.editingName.value = name; document.querySelector('#productFormTitle').textContent = `Edit ${name}`; document.querySelector('#cancelProductEdit').hidden = false; productForm.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+		const originalPriceInput = productForm.elements.originalPrice;
+		const salePriceInput = productForm.elements.price;
+		const discountPercentInput = productForm.elements.discountPercent;
+		originalPriceInput.addEventListener('input', () => { const original = Number(originalPriceInput.value); const sale = Number(salePriceInput.value); if (original > 0 && sale >= 0) discountPercentInput.value = Math.max(0, Math.min(100, ((original - sale) / original) * 100)).toFixed(2); });
+		salePriceInput.addEventListener('input', () => { const original = Number(originalPriceInput.value); const sale = Number(salePriceInput.value); if (original > 0 && sale >= 0) discountPercentInput.value = Math.max(0, Math.min(100, ((original - sale) / original) * 100)).toFixed(2); });
+		discountPercentInput.addEventListener('input', () => { const original = Number(originalPriceInput.value); const percent = Number(discountPercentInput.value); if (original > 0 && percent >= 0 && percent <= 100) salePriceInput.value = (original * (1 - percent / 100)).toFixed(2); });
+		productForm.addEventListener('submit', (event) => { event.preventDefault(); const data = Object.fromEntries(new FormData(productForm)); const originalPrice = Number(data.originalPrice); const price = Number(data.price); const percent = originalPrice > 0 ? Math.max(0, Math.min(100, ((originalPrice - price) / originalPrice) * 100)) : 0; const product = { name: data.name.trim(), image: data.image.trim(), price, originalPrice, discountPercent: percent, stock: Number(data.stock), description: data.description.trim() }; if (!product.name || !product.image || originalPrice < 0 || price < 0 || price > originalPrice || product.stock < 0) return notify('Enter valid pricing: sale price cannot exceed original price'); const index = products.findIndex((item) => item.name === data.editingName); index >= 0 ? products.splice(index, 1, product) : products.push(product); storage.set('joni-products', products); productForm.reset(); productForm.elements.editingName.value = ''; document.querySelector('#productFormTitle').textContent = 'Add a product'; document.querySelector('#cancelProductEdit').hidden = true; renderProducts(); renderMetrics(); notify('Product saved'); });
 		document.querySelector('#cancelProductEdit').addEventListener('click', () => { productForm.reset(); productForm.elements.editingName.value = ''; document.querySelector('#productFormTitle').textContent = 'Add a product'; document.querySelector('#cancelProductEdit').hidden = true; });
 		document.querySelector('#newProduct').addEventListener('click', () => { productForm.reset(); productForm.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
 		document.querySelector('#adminProductSearch').addEventListener('input', renderProducts);

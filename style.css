@@ -2389,7 +2389,19 @@ footer {
 .admin-form-row {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
     gap: 14px;
+}
+
+
+.admin-form-row > label {
+    align-self: start;
+    align-content: start;
+}
+
+
+.admin-form-row > label > input {
+    height: 43px;
 }
 
 
@@ -2469,6 +2481,20 @@ footer {
 .admin-order-row small {
     color: #66706c;
     font-size: 12px;
+}
+
+
+.admin-product-row del {
+    color: #87958f;
+    margin-right: 4px;
+}
+
+
+.admin-product-row em {
+    margin-left: 4px;
+    color: #d95d39;
+    font-style: normal;
+    font-weight: 700;
 }
 
 
