@@ -121,12 +121,10 @@
 	};
 
 	const setupAuthNavigation = async () => {
-		const navigation = document.querySelector('.main-nav ul');
+		const navigation = document.querySelector('.header-actions');
 		if (!navigation) return;
 		const existingLink = navigation.querySelector('.auth-nav-link');
-		const item = existingLink?.closest('li') || document.createElement('li');
 		const link = existingLink || document.createElement('a');
-		item.className = item.className || 'auth-nav-item';
 		link.className = 'auth-nav-link';
 		link.href = 'auth.html';
 		link.textContent = 'Login';
@@ -136,13 +134,14 @@
 			link.href = 'account.html';
 			const { data: profile } = await supabaseClient.from('profiles').select('role, is_active').eq('id', session.user.id).maybeSingle();
 			if (profile?.is_active === true && profile.role === 'admin' && !navigation.querySelector('.admin-nav-link')) {
-				const adminItem = document.createElement('li');
-				adminItem.className = 'admin-nav-item';
-				adminItem.innerHTML = '<a href="admin.html" class="admin-nav-link">Admin</a>';
-				navigation.append(adminItem);
+				const adminLink = document.createElement('a');
+				adminLink.href = 'admin.html';
+				adminLink.className = 'admin-nav-link';
+				adminLink.textContent = 'Admin';
+				navigation.prepend(adminLink);
 			}
 		}
-		if (!existingLink) { item.append(link); navigation.append(item); }
+		if (!existingLink) navigation.append(link);
 	};
 
 	const setupNavigation = () => {
@@ -225,8 +224,6 @@
 		carousel.querySelector('.carousel-prev')?.addEventListener('click', () => { showSlide(current - 1); restart(); });
 		carousel.querySelector('.carousel-next')?.addEventListener('click', () => { showSlide(current + 1); restart(); });
 		dots.forEach((dot, index) => dot.addEventListener('click', () => { showSlide(index); restart(); }));
-		carousel.addEventListener('mouseenter', () => clearInterval(timer));
-		carousel.addEventListener('mouseleave', restart);
 		showSlide(current < 0 ? 0 : current);
 		restart();
 	};

@@ -157,6 +157,35 @@ $$;
 revoke execute on function public.create_order(text, text, text, text, text, jsonb) from anon;
 grant execute on function public.create_order(text, text, text, text, text, jsonb) to authenticated;
 
+-- Authenticated customers can look up only their own order status.
+create or replace function public.lookup_order_status(p_order_number text, p_customer_email text)
+returns table (
+    id uuid,
+    order_number text,
+    status text,
+    total numeric,
+    delivery_location text,
+    created_at timestamptz,
+    order_items jsonb
+)
+language sql
+stable
+security invoker
+set search_path = public
+as $$
+    select o.id, o.order_number, o.status, o.total, o.delivery_location, o.created_at,
+        coalesce(jsonb_agg(jsonb_build_object('product_name', oi.product_name, 'quantity', oi.quantity, 'line_total', oi.line_total)) filter (where oi.id is not null), '[]'::jsonb)
+    from public.orders o
+    left join public.order_items oi on oi.order_id = o.id
+    where o.order_number = upper(trim(p_order_number))
+      and lower(o.customer_email) = lower(trim(p_customer_email))
+      and o.user_id = auth.uid()
+    group by o.id;
+$$;
+
+revoke all on function public.lookup_order_status(text, text) from public;
+grant execute on function public.lookup_order_status(text, text) to authenticated;
+
 -- Only staff/admin may write product images.
 drop policy if exists product_images_authenticated_upload on storage.objects;
 create policy product_images_authenticated_upload on storage.objects for insert to authenticated with check (bucket_id = 'product-images' and public.has_role('staff'));
