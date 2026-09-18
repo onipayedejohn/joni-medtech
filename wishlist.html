@@ -5,13 +5,15 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="description" content="Your saved medical laboratory products from Joni Medtech Supply.">
 	<link rel="stylesheet" href="style.css">
+	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+	<script src="supabase-client.js" defer></script>
 	<script src="script.js" defer></script>
 	<title>Wishlist | Joni Medtech Supply</title>
 </head>
 <body class="commerce-page">
 	<header class="site-header"><div class="header-container">
 		<a href="index.html" class="brand-logo" aria-label="Joni Medtech Supply home"><div class="logo-symbol">⚕</div><div class="brand-text"><span class="brand-name">JONI</span><span class="brand-subtitle">MEDTECH SUPPLY</span></div></a>
-		<nav class="main-nav" aria-label="Main navigation"><ul><li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="shop.html">Shop</a></li><li><a href="contact.html">Contact</a></li></ul></nav>
+		<nav class="main-nav" aria-label="Main navigation"><ul><li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="shop.html">Shop</a></li><li><a href="contact.html">Contact</a></li><li><a href="admin.html" class="admin-nav-link">Admin</a></li><li><a href="auth.html" class="auth-nav-link">Login</a></li></ul></nav>
 		<div class="header-actions"><a href="wishlist.html" class="header-icon-link" title="Wishlist" aria-label="Wishlist">♡<span class="header-badge wishlist-count">0</span></a><a href="cart.html" class="header-icon-link" title="Shopping Cart" aria-label="Shopping Cart">🛒<span class="header-badge cart-count">0</span></a><button class="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch theme"><span class="theme-icon" aria-hidden="true"></span></button></div>
 	</div></header>
 	<main class="commerce-main"><div class="commerce-heading"><div><span class="section-label">SAVED PRODUCTS</span><h1>Your Wishlist</h1><p>Keep products you are considering close, then move them to your cart when ready.</p></div><a class="secondary-action" href="shop.html">Browse products</a></div><section id="wishlistPageItems" class="wishlist-grid" aria-label="Saved products"></section></main>

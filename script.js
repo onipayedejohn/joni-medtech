@@ -50,6 +50,7 @@
 	const productCatalog = Object.fromEntries(Object.entries(catalog).map(([name, [image, price]]) => [name, { name, image, price, description: '', stock: 10 }]));
 	savedProducts.forEach((product) => { if (product.name) productCatalog[product.name] = { ...productCatalog[product.name], ...product }; });
 	const formatMoney = (amount) => `GH₵${amount.toLocaleString('en-GH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+	const supabaseClient = window.supabaseClient;
 	let productCards = [];
 	const toast = document.createElement('div');
 	toast.className = 'site-toast';
@@ -103,6 +104,46 @@
 		});
 	};
 
+	const authRedirect = () => `auth.html?next=${encodeURIComponent(`${location.pathname.split('/').pop() || 'index.html'}${location.hash}`)}`;
+
+	const getAuthenticatedSession = async () => {
+		if (!supabaseClient) return null;
+		const { data, error } = await supabaseClient.auth.getSession();
+		return error ? null : data.session;
+	};
+
+	const requireAuthentication = async () => {
+		const session = await getAuthenticatedSession();
+		if (session) return session;
+		location.assign(authRedirect());
+		return null;
+	};
+
+	const setupAuthNavigation = async () => {
+		const navigation = document.querySelector('.main-nav ul');
+		if (!navigation) return;
+		const existingLink = navigation.querySelector('.auth-nav-link');
+		const item = existingLink?.closest('li') || document.createElement('li');
+		const link = existingLink || document.createElement('a');
+		item.className = item.className || 'auth-nav-item';
+		link.className = 'auth-nav-link';
+		link.href = 'auth.html';
+		link.textContent = 'Login';
+		const session = await getAuthenticatedSession();
+		if (session) {
+			link.textContent = 'Account';
+			link.href = 'account.html';
+			const { data: profile } = await supabaseClient.from('profiles').select('role, is_active').eq('id', session.user.id).maybeSingle();
+			if (profile?.is_active === true && profile.role === 'admin' && !navigation.querySelector('.admin-nav-link')) {
+				const adminItem = document.createElement('li');
+				adminItem.className = 'admin-nav-item';
+				adminItem.innerHTML = '<a href="admin.html" class="admin-nav-link">Admin</a>';
+				navigation.append(adminItem);
+			}
+		}
+		if (!existingLink) { item.append(link); navigation.append(item); }
+	};
+
 	const setupNavigation = () => {
 		const currentPage = location.pathname.split('/').pop() || 'index.html';
 		document.querySelectorAll('.main-nav a').forEach((link) => {
@@ -136,6 +177,20 @@
 			productList.append(card);
 		});
 		productCards = [...productList.querySelectorAll('.product-item')];
+	};
+
+	const syncSupabaseProducts = async () => {
+		if (!supabaseClient || sessionStorage.getItem('joni-supabase-products-synced')) return;
+		const { data, error } = await supabaseClient.from('products').select('name, description, image_path, price, stock').eq('is_active', true);
+		if (error) {
+			console.warn('Supabase product sync failed; local catalogue remains active.', error.message);
+			return;
+		}
+		if (data?.length) {
+			storage.set('joni-products', data.map((product) => ({ name: product.name, description: product.description, image: product.image_path, price: Number(product.price), stock: Number(product.stock) })));
+		}
+		sessionStorage.setItem('joni-supabase-products-synced', 'true');
+		if (data?.length) location.reload();
 	};
 
 	const setupCarousel = () => {
@@ -214,7 +269,8 @@
 	};
 
 	const setupCart = () => {
-		document.querySelectorAll('.add-cart-button').forEach((button) => button.addEventListener('click', () => {
+		document.querySelectorAll('.add-cart-button').forEach((button) => button.addEventListener('click', async () => {
+			if (!await requireAuthentication()) return;
 			const name = productName(button.closest('.product-item'));
 			cart[name] = (cart[name] || 0) + 1;
 			storage.set('joni-cart', cart);
@@ -273,16 +329,26 @@
 			});
 			const subtotal = cartSubtotal();
 			summaryRoot.innerHTML = `<h2>Order summary</h2><div class="summary-line"><span>Subtotal</span><strong>${formatMoney(subtotal)}</strong></div><div class="summary-line"><span>Delivery</span><span>Confirmed after enquiry</span></div><div class="summary-total"><span>Total before delivery</span><strong>${formatMoney(subtotal)}</strong></div><button type="button" class="primary-action checkout-start">Continue to checkout</button><p class="summary-note">Your order is confirmed by our team before payment or delivery.</p>`;
-			summaryRoot.querySelector('.checkout-start').addEventListener('click', () => { checkoutPanel.hidden = false; checkoutPanel.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+			summaryRoot.querySelector('.checkout-start').addEventListener('click', async () => { if (!await requireAuthentication()) return; checkoutPanel.hidden = false; checkoutPanel.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
 		};
 		renderCartPage();
 		document.querySelector('#cancelCheckout')?.addEventListener('click', () => { checkoutPanel.hidden = true; });
-		document.querySelector('#checkoutForm')?.addEventListener('submit', (event) => {
+		document.querySelector('#checkoutForm')?.addEventListener('submit', async (event) => {
 			event.preventDefault();
 			if (!Object.keys(cart).length) return;
+			if (!await requireAuthentication()) return;
 			const data = new FormData(event.currentTarget);
 			const orderNumber = `JONI-${Date.now().toString().slice(-6)}`;
 			const order = { orderNumber, name: data.get('name'), email: data.get('email'), phone: data.get('phone'), location: data.get('location'), notes: data.get('notes'), total: cartSubtotal(), items: Object.entries(cart).map(([name, quantity]) => ({ name, quantity, price: productCatalog[name]?.price || 0 })), createdAt: new Date().toISOString() };
+			if (supabaseClient) {
+				const { data: remoteProducts } = await supabaseClient.from('products').select('id, name').in('name', Object.keys(cart));
+				if (remoteProducts?.length === Object.keys(cart).length) {
+					const remoteItems = Object.entries(cart).map(([name, quantity]) => ({ product_id: remoteProducts.find((product) => product.name === name).id, quantity }));
+					const { data: remoteOrder, error } = await supabaseClient.rpc('create_order', { p_customer_name: order.name, p_customer_email: order.email, p_customer_phone: order.phone, p_delivery_location: order.location, p_notes: order.notes, p_items: remoteItems });
+					if (error) { showToast('We could not submit the order. Please try again.'); return; }
+					if (remoteOrder?.order_number) order.orderNumber = remoteOrder.order_number;
+				}
+			}
 			const orderHistory = storage.get('joni-orders', []);
 			orderHistory.push(order);
 			storage.set('joni-orders', orderHistory);
@@ -345,8 +411,15 @@
 		});
 	};
 
-	const setupAdmin = () => {
+	const setupAdmin = async () => {
 		if (!document.querySelector('.admin-page')) return;
+		document.body.classList.add('admin-auth-pending');
+		if (!supabaseClient) { location.assign('auth.html?next=admin.html'); return; }
+		const { data: sessionData } = await supabaseClient.auth.getSession();
+		if (!sessionData.session) { location.assign('auth.html?next=admin.html'); return; }
+		const { data: profile } = await supabaseClient.from('profiles').select('role, is_active').eq('id', sessionData.session.user.id).maybeSingle();
+		if (!profile || profile.is_active !== true || profile.role !== 'admin') { location.assign('shop.html'); return; }
+		document.body.classList.remove('admin-auth-pending');
 		const adminToast = document.querySelector('#adminToast');
 		const notify = (message) => { adminToast.textContent = message; adminToast.classList.add('visible'); clearTimeout(notify.timer); notify.timer = setTimeout(() => adminToast.classList.remove('visible'), 2600); };
 		let products = storage.get('joni-products', []);
@@ -401,6 +474,7 @@
 	};
 
 	setupTheme();
+	setupAuthNavigation();
 	setupNavigation();
 	setupCarousel();
 	setupStoreCatalog();
@@ -411,4 +485,5 @@
 	setupCommercePages();
 	setupAdmin();
 	updateBadges();
+	syncSupabaseProducts();
 })();

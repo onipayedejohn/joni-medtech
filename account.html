@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Manage your Joni Medtech Supply account and order history.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="auth.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="supabase-client.js" defer></script>
+    <script src="script.js" defer></script>
+    <script src="account.js" defer></script>
+    <title>My Account | Joni Medtech Supply</title>
+</head>
+<body class="account-page">
+    <header class="site-header">
+        <div class="header-container">
+            <a href="index.html" class="brand-logo" aria-label="Joni Medtech Supply home"><div class="logo-symbol">⚕</div><div class="brand-text"><span class="brand-name">JONI</span><span class="brand-subtitle">MEDTECH SUPPLY</span></div></a>
+            <nav class="main-nav" aria-label="Main navigation"><ul><li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="shop.html">Shop</a></li><li><a href="contact.html">Contact</a></li><li><a href="admin.html" class="admin-nav-link">Admin</a></li><li><a href="account.html" class="auth-nav-link active">Account</a></li></ul></nav>
+            <div class="header-actions"><a href="wishlist.html" class="header-icon-link" title="Wishlist" aria-label="Wishlist">♡<span class="header-badge wishlist-count">0</span></a><a href="cart.html" class="header-icon-link" title="Shopping Cart" aria-label="Shopping Cart">🛒<span class="header-badge cart-count">0</span></a><button class="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch theme"><span class="theme-icon" aria-hidden="true"></span></button></div>
+        </div>
+    </header>
+    <main class="account-main">
+        <div id="accountLoading" class="account-state">Loading your account...</div>
+        <div id="accountUnauthenticated" class="account-state" hidden><h1>Sign in to view your account</h1><p>Access your profile, order history, and saved shopping activity.</p><a class="primary-action" href="auth.html?next=account.html">Sign in</a></div>
+        <div id="accountContent" hidden>
+            <div class="account-heading"><div><span class="section-label">YOUR ACCOUNT</span><h1>Welcome back, <span id="accountName">Customer</span></h1><p>Manage your details and keep track of your Joni Medtech Supply orders.</p></div><button id="logoutButton" class="logout-button" type="button">Log out</button></div>
+            <div id="accountMessage" class="account-message" role="status"></div>
+            <section class="account-grid">
+                <article class="account-card account-profile-card"><div class="account-card-heading"><div><span class="account-eyebrow">PROFILE</span><h2>Personal information</h2></div><span id="accountRole" class="role-badge">Customer</span></div><form id="profileForm" class="account-form"><label>Full name<input id="profileName" name="fullName" autocomplete="name" required></label><label>Email address<input id="profileEmail" name="email" type="email" autocomplete="email" disabled></label><button class="primary-action" type="submit">Save changes</button></form></article>
+                <article class="account-card account-summary-card"><span class="account-eyebrow">AT A GLANCE</span><h2>Shopping overview</h2><div class="account-stats"><div><strong id="orderCount">0</strong><span>Orders</span></div><div><strong id="accountSpend">GH₵0.00</strong><span>Total spent</span></div><div><strong id="wishlistTotal">0</strong><span>Saved items</span></div></div><a class="secondary-action" href="shop.html">Continue shopping →</a></article>
+            </section>
+            <section class="account-card account-orders-card"><div class="account-card-heading"><div><span class="account-eyebrow">PURCHASE HISTORY</span><h2>Your orders</h2></div><span id="ordersUpdated" class="account-muted"></span></div><div id="accountOrders" class="account-orders"></div></section>
+        </div>
+    </main>
+    <footer><div class="footer-container"><div class="footer-brand"><h3>Joni Medtech Supply</h3><p>Your trusted source for medical laboratory supplies, consumables, diagnostic products, and laboratory equipment.</p></div><div class="footer-links"><h3>Quick Links</h3><a href="index.html">Home</a><a href="about.html">About</a><a href="shop.html">Shop</a><a href="cart.html">Cart</a></div><div class="footer-contact"><h3>Contact</h3><a href="tel:+233249698992">☎ +233 24 969 8992</a><a href="https://wa.me/233249698992" target="_blank" rel="noopener">WhatsApp</a><a href="mailto:onipayedejohn11@gmail.com">✉ onipayedejohn11@gmail.com</a><span class="location-animation">⌖ Obuasi, Ashanti Region, Ghana</span></div></div><div class="footer-bottom"><p>&copy; 2026 Joni Medtech. All rights reserved.</p></div></footer>
+</body>
+</html>
