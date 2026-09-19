@@ -63,7 +63,7 @@
                  NAVIGATION
             ================================================== -->
 
-            <nav class="main-nav">
+            <nav class="main-nav" id="mainNav" aria-label="Main navigation">
 
                 <ul>
 
@@ -98,6 +98,11 @@
 
                 </ul>
 
+                <div class="nav-drawer-account">
+                    <a href="admin.html" class="admin-nav-link"><svg class="nav-link-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3Z"></path><path d="M9 12l2 2 4-4"></path></svg><span>Admin</span></a>
+                    <a href="auth.html" class="auth-nav-link"><svg class="nav-link-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.5-6 8-6s8 2 8 6"></path></svg><span>Login</span></a>
+                </div>
+
             </nav>
 
 
@@ -106,15 +111,16 @@
             ================================================== -->
 
             <div class="header-actions">
-                <a href="admin.html" class="admin-nav-link">Admin</a>
-                <a href="auth.html" class="auth-nav-link">Login</a>
-                <a href="status.html" class="track-order-link" title="Track order" aria-label="Track order"><svg class="delivery-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h11v10H3zM14 10h4l3 3v3h-7zM6.5 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM18 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"></path><path d="M14 13h7"></path></svg><span class="visually-hidden">Track order</span></a>
+                <a href="admin.html" class="admin-nav-link"><svg class="nav-link-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3Z"></path><path d="M9 12l2 2 4-4"></path></svg><span>Admin</span></a>
+                <a href="auth.html" class="auth-nav-link"><svg class="nav-link-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.5-6 8-6s8 2 8 6"></path></svg><span>Login</span></a>
+                <button type="button" class="track-order-link" data-open="track" title="Track order" aria-label="Track order"><svg class="delivery-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h11v10H3zM14 10h4l3 3v3h-7zM6.5 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM18 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"></path><path d="M14 13h7"></path></svg><span class="visually-hidden">Track order</span></button>
 
 
                 <!-- WISHLIST -->
 
-                <a href="wishlist.html"
+                <button type="button"
                    class="header-icon-link"
+                   data-open="wishlist"
                    title="Wishlist"
                    aria-label="Wishlist">
 
@@ -124,13 +130,14 @@
                         0
                     </span>
 
-                </a>
+                </button>
 
 
                 <!-- SHOPPING CART -->
 
-                <a href="cart.html"
+                <button type="button"
                    class="header-icon-link"
+                   data-open="cart"
                    title="Shopping Cart"
                    aria-label="Shopping Cart">
 
@@ -140,15 +147,18 @@
                         0
                     </span>
 
-                </a>
+                </button>
 
                 <button class="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch theme"><span class="theme-icon" aria-hidden="true"></span></button>
 
+                <button type="button" class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="mainNav" aria-label="Toggle menu"><span></span><span></span><span></span></button>
 
             </div>
 
 
         </div>
+
+        <div class="nav-scrim" id="navScrim" hidden></div>
 
     </header>
 
@@ -452,9 +462,17 @@
                     Contact
                 </a>
 
-                <a href="status.html">
+                <button type="button" class="footer-link-button" data-open="track">
                     Track order
-                </a>
+                </button>
+
+                <button type="button" class="footer-link-button" data-open="cart">
+                    Cart
+                </button>
+
+                <button type="button" class="footer-link-button" data-open="wishlist">
+                    Wishlist
+                </button>
 
 
             </div>

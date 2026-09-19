@@ -120,28 +120,41 @@
 		return null;
 	};
 
+	const userIcon = '<svg class="nav-link-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.5-6 8-6s8 2 8 6"></path></svg>';
+	const shieldIcon = '<svg class="nav-link-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3Z"></path><path d="M9 12l2 2 4-4"></path></svg>';
+
 	const setupAuthNavigation = async () => {
 		const navigation = document.querySelector('.header-actions');
 		if (!navigation) return;
 		const existingLink = navigation.querySelector('.auth-nav-link');
-		const link = existingLink || document.createElement('a');
-		link.className = 'auth-nav-link';
-		link.href = 'auth.html';
-		link.textContent = 'Login';
+		if (!existingLink) {
+			const link = document.createElement('a');
+			link.className = 'auth-nav-link';
+			link.href = 'auth.html';
+			link.innerHTML = `${userIcon}<span>Login</span>`;
+			navigation.append(link);
+		}
 		const session = await getAuthenticatedSession();
+		const authLinks = [...document.querySelectorAll('.auth-nav-link')];
+		authLinks.forEach((link) => {
+			if (!link.querySelector('span')) link.innerHTML = `${userIcon}<span>${link.textContent.trim()}</span>`;
+			link.querySelector('span').textContent = session ? 'Account' : 'Login';
+			link.href = session ? 'account.html' : 'auth.html';
+		});
 		if (session) {
-			link.textContent = 'Account';
-			link.href = 'account.html';
 			const { data: profile } = await supabaseClient.from('profiles').select('role, is_active').eq('id', session.user.id).maybeSingle();
-			if (profile?.is_active === true && profile.role === 'admin' && !navigation.querySelector('.admin-nav-link')) {
-				const adminLink = document.createElement('a');
-				adminLink.href = 'admin.html';
-				adminLink.className = 'admin-nav-link';
-				adminLink.textContent = 'Admin';
-				navigation.prepend(adminLink);
+			if (profile?.is_active === true && profile.role === 'admin') {
+				authLinks.forEach((link) => {
+					const container = link.closest('.header-actions, .nav-drawer-account');
+					if (!container || container.querySelector('.admin-nav-link')) return;
+					const adminLink = document.createElement('a');
+					adminLink.href = 'admin.html';
+					adminLink.className = 'admin-nav-link';
+					adminLink.innerHTML = `${shieldIcon}<span>Admin</span>`;
+					container.prepend(adminLink);
+				});
 			}
 		}
-		if (!existingLink) navigation.append(link);
 	};
 
 	const setupNavigation = () => {
@@ -283,66 +296,67 @@
 			updateBadges();
 			showToast(`${name} added to cart`);
 		}));
-		const openCart = (event) => { event.preventDefault(); renderCart(); document.querySelector('.cart-drawer')?.classList.add('open'); };
-		document.querySelectorAll('a[href*="#cart"]').forEach((link) => link.addEventListener('click', openCart));
 	};
 
 	const cartSubtotal = () => Object.entries(cart).reduce((total, [name, quantity]) => total + (productCatalog[name]?.price || 0) * quantity, 0);
 
-	const setupCommercePages = () => {
-		const wishlistRoot = document.querySelector('#wishlistPageItems');
-		if (wishlistRoot) {
-			const renderWishlist = () => {
-				wishlistRoot.replaceChildren();
-				if (!wishlist.length) {
-					wishlistRoot.innerHTML = '<div class="commerce-empty"><strong>Your wishlist is waiting for products.</strong><p>Save products from the shop and they will appear here.</p><a class="primary-action" href="shop.html">Explore the shop</a></div>';
-					return;
-				}
-				wishlist.filter((name) => productCatalog[name]).forEach((name) => {
-					const { image, price } = productCatalog[name];
-					const card = document.createElement('article');
-					card.className = 'wishlist-card';
-					card.innerHTML = `<img src="${image}" alt="${name}"><div class="wishlist-card-body"><h2>${name}</h2><strong>${formatMoney(price)}</strong><div class="wishlist-card-actions"><button type="button" class="primary-action wishlist-add">Add to cart</button><button type="button" class="text-action wishlist-remove">Remove</button></div></div>`;
-					card.querySelector('.wishlist-add').addEventListener('click', () => { cart[name] = (cart[name] || 0) + 1; storage.set('joni-cart', cart); updateBadges(); showToast(`${name} added to cart`); });
-					card.querySelector('.wishlist-remove').addEventListener('click', () => { wishlist.splice(wishlist.indexOf(name), 1); storage.set('joni-wishlist', wishlist); updateBadges(); renderWishlist(); });
-					wishlistRoot.append(card);
-				});
-			};
-			renderWishlist();
-		}
+	const createModalShell = (variantClass) => {
+		const overlay = document.createElement('div');
+		overlay.className = `review-modal-overlay ${variantClass}-overlay`;
+		overlay.hidden = true;
+		overlay.innerHTML = `<div class="review-modal ${variantClass}" role="dialog" aria-modal="true"><button type="button" class="review-modal-close" aria-label="Close">×</button><div class="${variantClass}-body"></div></div>`;
+		document.body.append(overlay);
+		const close = () => { overlay.hidden = true; };
+		overlay.addEventListener('click', (event) => { if (event.target === overlay) close(); });
+		overlay.querySelector('.review-modal-close').addEventListener('click', close);
+		document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !overlay.hidden) close(); });
+		return { overlay, body: overlay.querySelector(`.${variantClass}-body`), close };
+	};
 
-		const cartRoot = document.querySelector('#cartPageItems');
-		const summaryRoot = document.querySelector('#orderSummary');
-		const checkoutPanel = document.querySelector('#checkoutPanel');
-		if (!cartRoot || !summaryRoot) return;
-		const renderCartPage = () => {
-			cartRoot.replaceChildren();
-			const names = Object.keys(cart).filter((name) => productCatalog[name] && cart[name] > 0);
-			if (!names.length) {
-				cartRoot.innerHTML = '<div class="commerce-empty"><strong>Your cart is empty.</strong><p>Add products from the shop to begin your order.</p><a class="primary-action" href="shop.html">Continue shopping</a></div>';
-				summaryRoot.innerHTML = '<h2>Order summary</h2><p class="summary-empty">Your order total will appear here.</p>';
-				return;
-			}
-			names.forEach((name) => {
-				const { image, price } = productCatalog[name];
-				const row = document.createElement('article');
-				row.className = 'cart-page-row';
-				row.innerHTML = `<img src="${image}" alt="${name}"><div class="cart-page-product"><h2>${name}</h2><span>${formatMoney(price)} each</span><button type="button" class="text-action cart-remove">Remove</button></div><div class="quantity-control"><button type="button" aria-label="Decrease ${name} quantity" class="quantity-decrease">−</button><output>${cart[name]}</output><button type="button" aria-label="Increase ${name} quantity" class="quantity-increase">+</button></div><strong class="cart-line-total">${formatMoney(price * cart[name])}</strong>`;
-				row.querySelector('.quantity-decrease').addEventListener('click', () => { cart[name] -= 1; if (cart[name] <= 0) delete cart[name]; storage.set('joni-cart', cart); updateBadges(); renderCartPage(); });
-				row.querySelector('.quantity-increase').addEventListener('click', () => { cart[name] += 1; storage.set('joni-cart', cart); updateBadges(); renderCartPage(); });
-				row.querySelector('.cart-remove').addEventListener('click', () => { delete cart[name]; storage.set('joni-cart', cart); updateBadges(); renderCartPage(); });
-				cartRoot.append(row);
-			});
-			const subtotal = cartSubtotal();
-			summaryRoot.innerHTML = `<h2>Order summary</h2><div class="summary-line"><span>Subtotal</span><strong>${formatMoney(subtotal)}</strong></div><div class="summary-line"><span>Delivery</span><span>Confirmed after enquiry</span></div><div class="summary-total"><span>Total before delivery</span><strong>${formatMoney(subtotal)}</strong></div><button type="button" class="primary-action checkout-start">Continue to checkout</button><p class="summary-note">Your order is confirmed by our team before payment or delivery.</p>`;
-			summaryRoot.querySelector('.checkout-start').addEventListener('click', async () => { if (!await requireAuthentication()) return; checkoutPanel.hidden = false; checkoutPanel.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
-		};
-		renderCartPage();
-		document.querySelector('#cancelCheckout')?.addEventListener('click', () => { checkoutPanel.hidden = true; });
-		document.querySelector('#checkoutForm')?.addEventListener('submit', async (event) => {
+	let wishlistModalRefs = null;
+	const getWishlistModal = () => wishlistModalRefs ??= createModalShell('wishlist-modal');
+
+	const renderWishlistModal = () => {
+		const refs = getWishlistModal();
+		refs.overlay.hidden = false;
+		const items = wishlist.filter((name) => productCatalog[name]);
+		if (!items.length) {
+			refs.body.innerHTML = '<h2>Your Wishlist</h2><div class="commerce-empty"><strong>Your wishlist is waiting for products.</strong><p>Save products from the shop and they will appear here.</p><a class="primary-action" href="shop.html">Explore the shop</a></div>';
+			return;
+		}
+		refs.body.innerHTML = `<h2>Your Wishlist</h2><div class="wishlist-modal-grid">${items.map((name) => { const { image, price } = productCatalog[name]; return `<article class="wishlist-card"><img src="${image}" alt="${escapeHtml(name)}"><div class="wishlist-card-body"><h3>${escapeHtml(name)}</h3><strong>${formatMoney(price)}</strong><div class="wishlist-card-actions"><button type="button" class="primary-action wishlist-modal-add" data-name="${escapeHtml(name)}">Add to cart</button><button type="button" class="text-action wishlist-modal-remove" data-name="${escapeHtml(name)}">Remove</button></div></div></article>`; }).join('')}</div>`;
+		refs.body.querySelectorAll('.wishlist-modal-add').forEach((button) => button.addEventListener('click', () => { const name = button.dataset.name; cart[name] = (cart[name] || 0) + 1; storage.set('joni-cart', cart); updateBadges(); showToast(`${name} added to cart`); }));
+		refs.body.querySelectorAll('.wishlist-modal-remove').forEach((button) => button.addEventListener('click', () => { const name = button.dataset.name; wishlist.splice(wishlist.indexOf(name), 1); storage.set('joni-wishlist', wishlist); updateBadges(); renderWishlistModal(); }));
+	};
+
+	const openWishlistModal = () => renderWishlistModal();
+
+	let cartModalRefs = null;
+	const getCartModal = () => cartModalRefs ??= createModalShell('cart-modal');
+
+	const renderCartModalCart = (refs) => {
+		const names = Object.keys(cart).filter((name) => productCatalog[name] && cart[name] > 0);
+		if (!names.length) {
+			refs.body.innerHTML = '<h2>Your Cart</h2><div class="commerce-empty"><strong>Your cart is empty.</strong><p>Add products from the shop to begin your order.</p><a class="primary-action" href="shop.html">Continue shopping</a></div>';
+			return;
+		}
+		const rows = names.map((name) => { const { image, price } = productCatalog[name]; return `<article class="cart-page-row"><img src="${image}" alt="${escapeHtml(name)}"><div class="cart-page-product"><h2>${escapeHtml(name)}</h2><span>${formatMoney(price)} each</span><button type="button" class="text-action cart-modal-remove" data-name="${escapeHtml(name)}">Remove</button></div><div class="quantity-control"><button type="button" aria-label="Decrease ${escapeHtml(name)} quantity" class="quantity-decrease" data-name="${escapeHtml(name)}">−</button><output>${cart[name]}</output><button type="button" aria-label="Increase ${escapeHtml(name)} quantity" class="quantity-increase" data-name="${escapeHtml(name)}">+</button></div><strong class="cart-line-total">${formatMoney(price * cart[name])}</strong></article>`; }).join('');
+		const subtotal = cartSubtotal();
+		refs.body.innerHTML = `<h2>Your Cart</h2><div class="cart-modal-items">${rows}</div><div class="order-summary"><h2>Order summary</h2><div class="summary-line"><span>Subtotal</span><strong>${formatMoney(subtotal)}</strong></div><div class="summary-line"><span>Delivery</span><span>Confirmed after enquiry</span></div><div class="summary-total"><span>Total before delivery</span><strong>${formatMoney(subtotal)}</strong></div><button type="button" class="primary-action cart-modal-checkout">Continue to checkout</button><p class="summary-note">Your order is confirmed by our team before payment or delivery.</p></div>`;
+		refs.body.querySelectorAll('.quantity-decrease').forEach((button) => button.addEventListener('click', () => { const name = button.dataset.name; cart[name] -= 1; if (cart[name] <= 0) delete cart[name]; storage.set('joni-cart', cart); updateBadges(); renderCartModalCart(refs); }));
+		refs.body.querySelectorAll('.quantity-increase').forEach((button) => button.addEventListener('click', () => { const name = button.dataset.name; cart[name] += 1; storage.set('joni-cart', cart); updateBadges(); renderCartModalCart(refs); }));
+		refs.body.querySelectorAll('.cart-modal-remove').forEach((button) => button.addEventListener('click', () => { delete cart[button.dataset.name]; storage.set('joni-cart', cart); updateBadges(); renderCartModalCart(refs); }));
+		refs.body.querySelector('.cart-modal-checkout')?.addEventListener('click', async () => { if (!await requireAuthentication()) return; renderCartModalCheckout(refs); });
+	};
+
+	const renderCartModalCheckout = (refs) => {
+		refs.body.innerHTML = `<h2>Secure Checkout</h2><p class="checkout-lede">We will use these details to confirm availability and arrange delivery.</p><form class="checkout-form" id="cartModalCheckoutForm"><div class="checkout-fields"><label>Full name<input name="name" autocomplete="name" required></label><label>Email address<input type="email" name="email" autocomplete="email" required></label><label>Phone number<input type="tel" name="phone" autocomplete="tel" required></label><label>Delivery location<input name="location" autocomplete="street-address" required></label></div><label>Order notes <textarea name="notes" rows="3" placeholder="Optional delivery or product notes"></textarea></label><div class="checkout-actions"><button class="primary-action" type="submit">Place order</button><button class="text-action" type="button" id="cartModalBack">Back to cart</button></div></form>`;
+		refs.body.querySelector('#cartModalBack').addEventListener('click', () => renderCartModalCart(refs));
+		refs.body.querySelector('#cartModalCheckoutForm').addEventListener('submit', async (event) => {
 			event.preventDefault();
 			if (!Object.keys(cart).length) return;
-			if (!await requireAuthentication()) return;
+			const submitButton = event.currentTarget.querySelector('button[type="submit"]');
+			submitButton.disabled = true;
 			const data = new FormData(event.currentTarget);
 			const orderNumber = `JONI-${Date.now().toString().slice(-6)}`;
 			const order = { orderNumber, name: data.get('name'), email: data.get('email'), phone: data.get('phone'), location: data.get('location'), notes: data.get('notes'), total: cartSubtotal(), items: Object.entries(cart).map(([name, quantity]) => ({ name, quantity, price: productCatalog[name]?.price || 0 })), createdAt: new Date().toISOString() };
@@ -351,7 +365,7 @@
 				if (remoteProducts?.length === Object.keys(cart).length) {
 					const remoteItems = Object.entries(cart).map(([name, quantity]) => ({ product_id: remoteProducts.find((product) => product.name === name).id, quantity }));
 					const { data: remoteOrder, error } = await supabaseClient.rpc('create_order', { p_customer_name: order.name, p_customer_email: order.email, p_customer_phone: order.phone, p_delivery_location: order.location, p_notes: order.notes, p_items: remoteItems });
-					if (error) { showToast('We could not submit the order. Please try again.'); return; }
+					if (error) { submitButton.disabled = false; showToast('We could not submit the order. Please try again.'); return; }
 					if (remoteOrder?.order_number) order.orderNumber = remoteOrder.order_number;
 				}
 			}
@@ -362,46 +376,75 @@
 			Object.keys(cart).forEach((name) => delete cart[name]);
 			storage.set('joni-cart', cart);
 			updateBadges();
-			checkoutPanel.hidden = true;
-			document.querySelector('#orderConfirmation').hidden = false;
-			document.querySelector('#orderConfirmation').innerHTML = `<span class="section-label">ORDER RECEIVED</span><h2>Thank you, ${data.get('name')}.</h2><p>Your enquiry <strong>${orderNumber}</strong> has been received. We will contact you at ${data.get('phone')} to confirm availability, delivery, and payment.</p><a class="primary-action" href="shop.html">Return to shop</a>`;
-			renderCartPage();
-			document.querySelector('#orderConfirmation').scrollIntoView({ behavior: 'smooth', block: 'start' });
+			refs.body.innerHTML = `<div class="order-confirmation"><span class="section-label">ORDER RECEIVED</span><h2>Thank you, ${escapeHtml(data.get('name'))}.</h2><p>Your enquiry <strong>${escapeHtml(order.orderNumber)}</strong> has been received. We will contact you at ${escapeHtml(data.get('phone'))} to confirm availability, delivery, and payment.</p><div class="checkout-actions"><a class="primary-action" href="shop.html">Return to shop</a><button type="button" class="text-action" id="cartModalContinue">Continue browsing</button></div></div>`;
+			refs.body.querySelector('#cartModalContinue').addEventListener('click', refs.close);
 		});
 	};
 
-	const renderCart = () => {
-		let drawer = document.querySelector('.cart-drawer');
-		if (!drawer) {
-			drawer = document.createElement('aside');
-			drawer.className = 'cart-drawer';
-			drawer.setAttribute('aria-label', 'Shopping cart');
-			document.body.append(drawer);
-		}
-		drawer.replaceChildren();
-		const heading = document.createElement('div');
-		heading.className = 'cart-drawer-header';
-		heading.innerHTML = '<h2>Your Cart</h2><button type="button" class="cart-close" aria-label="Close cart">×</button>';
-		drawer.append(heading);
-		const names = Object.keys(cart);
-		if (!names.length) {
-			const empty = document.createElement('p');
-			empty.className = 'cart-empty';
-			empty.textContent = 'Your cart is empty.';
-			drawer.append(empty);
-		} else {
-			const list = document.createElement('div');
-			list.className = 'cart-items';
-			names.forEach((name) => {
-				const row = document.createElement('div');
-				row.className = 'cart-row';
-				row.innerHTML = `<span>${name}</span><strong>×${cart[name]}</strong><button type="button" aria-label="Remove ${name}">Remove</button>`;
-				row.querySelector('button').addEventListener('click', () => { delete cart[name]; storage.set('joni-cart', cart); updateBadges(); renderCart(); });
-				list.append(row);
-			});
-			drawer.append(list);
-		}
-		heading.querySelector('.cart-close').addEventListener('click', () => drawer.classList.remove('open'));
+	const openCartModal = () => {
+		const refs = getCartModal();
+		refs.overlay.hidden = false;
+		renderCartModalCart(refs);
+	};
+
+	let trackModalRefs = null;
+	const getTrackModal = () => trackModalRefs ??= createModalShell('track-modal');
+
+	const renderTrackResult = (order) => {
+		const status = String(order.status || 'pending').toLowerCase();
+		const steps = ['pending', 'confirmed', 'processing', 'completed'];
+		const current = steps.indexOf(status);
+		return `<div class="status-result-heading"><div><span class="status-eyebrow">${escapeHtml(order.order_number)}</span><h2>Order status</h2><p>Placed ${new Date(order.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</p></div><span class="order-status status-${escapeHtml(status)}">${escapeHtml(status)}</span></div><div class="status-timeline">${steps.map((step, index) => `<div class="status-step ${index <= current ? 'complete' : ''} ${index === current ? 'current' : ''}"><span>${index < current ? '✓' : index + 1}</span><strong>${step}</strong></div>`).join('')}</div><div class="status-order-summary"><div><span>Order total</span><strong>${formatMoney(order.total)}</strong></div><div><span>Delivery location</span><strong>${escapeHtml(order.delivery_location || 'Being confirmed')}</strong></div></div><div class="status-items">${(order.order_items || []).map((item) => `<div><span>${escapeHtml(item.product_name)} × ${item.quantity}</span><strong>${formatMoney(item.line_total)}</strong></div>`).join('') || '<p>Item details are unavailable for this order.</p>'}</div>`;
+	};
+
+	const openTrackModal = async () => {
+		const refs = getTrackModal();
+		refs.overlay.hidden = false;
+		if (!supabaseClient) { refs.body.innerHTML = '<h2>Track your order</h2><p class="review-empty">Order tracking is temporarily unavailable.</p>'; return; }
+		refs.body.innerHTML = '<h2>Track your order</h2><p class="track-modal-loading">Checking sign-in status...</p>';
+		const session = await getAuthenticatedSession();
+		refs.body.innerHTML = `<h2>Track your order</h2>${session ? '' : `<p class="review-signin-note">Please <a href="${authRedirect()}">sign in</a> to securely check an order connected to your account.</p>`}<form class="status-form" id="trackModalForm"><label>Order number<input name="orderNumber" placeholder="e.g. JONI-AB12CD34" autocomplete="off" required></label><label>Order email<input name="email" type="email" placeholder="The email used at checkout" autocomplete="email" required></label><button class="primary-action" type="submit"${session ? '' : ' disabled'}>Check order status</button></form><div class="track-modal-message" id="trackModalMessage" hidden></div><div class="status-result" id="trackModalResult" hidden></div>`;
+		const form = refs.body.querySelector('#trackModalForm');
+		const messageBox = refs.body.querySelector('#trackModalMessage');
+		const resultBox = refs.body.querySelector('#trackModalResult');
+		form.addEventListener('submit', async (event) => {
+			event.preventDefault();
+			messageBox.hidden = true;
+			resultBox.hidden = true;
+			const submitButton = form.querySelector('button');
+			submitButton.disabled = true;
+			submitButton.textContent = 'Checking...';
+			const values = Object.fromEntries(new FormData(form));
+			const { data, error } = await supabaseClient.rpc('lookup_order_status', { p_order_number: values.orderNumber.trim().toUpperCase(), p_customer_email: values.email.trim().toLowerCase() });
+			submitButton.disabled = false;
+			submitButton.textContent = 'Check order status';
+			if (error || !data?.length) { messageBox.hidden = false; messageBox.textContent = 'We could not find an order matching those details.'; return; }
+			resultBox.hidden = false;
+			resultBox.innerHTML = renderTrackResult(data[0]);
+		});
+	};
+
+	const setupPopupTriggers = () => {
+		document.querySelectorAll('[data-open="wishlist"]').forEach((el) => el.addEventListener('click', (event) => { event.preventDefault(); openWishlistModal(); }));
+		document.querySelectorAll('[data-open="cart"]').forEach((el) => el.addEventListener('click', (event) => { event.preventDefault(); openCartModal(); }));
+		document.querySelectorAll('[data-open="track"]').forEach((el) => el.addEventListener('click', (event) => { event.preventDefault(); openTrackModal(); }));
+	};
+
+	const setupNavToggle = () => {
+		const toggle = document.querySelector('#navToggle');
+		const nav = document.querySelector('#mainNav');
+		const scrim = document.querySelector('#navScrim');
+		if (!toggle || !nav) return;
+		const setOpen = (open) => {
+			nav.classList.toggle('open', open);
+			toggle.classList.toggle('open', open);
+			toggle.setAttribute('aria-expanded', String(open));
+			if (scrim) scrim.hidden = !open;
+		};
+		toggle.addEventListener('click', () => setOpen(!nav.classList.contains('open')));
+		scrim?.addEventListener('click', () => setOpen(false));
+		nav.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setOpen(false)));
+		document.addEventListener('keydown', (event) => { if (event.key === 'Escape') setOpen(false); });
 	};
 
 	const reviewStats = new Map();
@@ -626,14 +669,15 @@
 	setupTheme();
 	setupAuthNavigation();
 	setupNavigation();
+	setupNavToggle();
 	setupCarousel();
 	setupStoreCatalog();
 	setupSearch();
 	setupWishlist();
 	setupCart();
 	setupReviews();
+	setupPopupTriggers();
 	setupContactForm();
-	setupCommercePages();
 	setupAdmin();
 	updateBadges();
 	syncSupabaseProducts();
