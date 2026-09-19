@@ -40,6 +40,11 @@ $$;
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created after insert on auth.users for each row execute function public.handle_new_user();
 
+-- Trigger-only function: never meant to be called directly via PostgREST RPC.
+-- Supabase grants EXECUTE to anon/authenticated directly (not only via PUBLIC) on
+-- function creation, so "revoke ... from public" alone does not remove those grants.
+revoke all on function public.handle_new_user() from public, anon, authenticated;
+
 insert into public.profiles (id, full_name)
 select id, coalesce(raw_user_meta_data ->> 'full_name', '') from auth.users
 on conflict (id) do nothing;
@@ -59,7 +64,7 @@ as $$
     );
 $$;
 
-revoke all on function public.has_role(text) from public;
+revoke all on function public.has_role(text) from public, anon, authenticated;
 grant execute on function public.has_role(text) to authenticated;
 
 alter table public.profiles enable row level security;
@@ -87,6 +92,9 @@ $$;
 
 drop trigger if exists profiles_prevent_privilege_change on public.profiles;
 create trigger profiles_prevent_privilege_change before update on public.profiles for each row execute function public.prevent_profile_privilege_change();
+
+-- Trigger-only function: never meant to be called directly via PostgREST RPC.
+revoke all on function public.prevent_profile_privilege_change() from public, anon, authenticated;
 
 -- Products and settings are writable only by staff/admin; public reads remain available.
 drop policy if exists products_staff_write on public.products;
@@ -183,7 +191,7 @@ as $$
     group by o.id;
 $$;
 
-revoke all on function public.lookup_order_status(text, text) from public;
+revoke all on function public.lookup_order_status(text, text) from public, anon;
 grant execute on function public.lookup_order_status(text, text) to authenticated;
 
 -- Only staff/admin may write product images.

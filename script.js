@@ -21,33 +21,33 @@
 	const cart = storage.get('joni-cart', {});
 	const wishlist = storage.get('joni-wishlist', []);
 	const catalog = {
-		'Anti Sera ABO Blood Grouping Reagents': ['images/Anti Sera ABO Blood grouping reagents.jfif', 27],
-		'Urine Dipstick': ['images/urine dipstick.jfif', 13.5],
-		'5 Part Hematology Analyzer': ['images/5 part hematology analyzer.jfif', 36818.2],
-		'Centrifuge': ['images/centrifuge.jfif', 3218.4],
-		'Bacteria Culture Media': ['images/Bacteria culture media.jfif', 1080],
-		'Clinical Chemistry Analyzer': ['images/Clinical chemistry analyzer.jfif', 43638.25],
-		'GeneXpert PCR': ['images/geneXpert PCR.jfif', 34519.2],
-		'CPDA Blood Transfusion Bag': ['images/CPDA Blood transfusion bag.jfif', 384.3],
-		'HB Electrophoresis Device': ['images/HB electrophoresis device.jfif', 2455.2],
-		'HIV OraQuick': ['images/HIV Oraquick.jfif', 51.3],
-		'Disposable Nose Masks': ['images/Disposable nose masks.jfif', 40.5],
-		'EDTA Blood Collection Tube': ['images/EDTA blood collection tube.jfif', 57.6],
-		'Hepatitis B Profile Kit': ['images/Hepatitis B profile kit.jfif', 30.6],
-		'Semi-Automated Hematology Analyzer': ['images/Semi-atomatated hematology analyzer.jfif', 9088.65],
-		'Semi-Automated Chemistry Analyzer': ['images/Semi-automated chemistry analyzer.jfif', 8537.65],
-		'Zeiss Promorstar Light Microscope': ['images/Zeiss Promorstar light microscope.jfif', 8346.7],
-		'Giemsa Solution': ['images/giemsa solution.jfif', 43.2],
-		'MicroPipette': ['images/microPipette.jfif', 23.4],
-		'Malaria RDT': ['images/malaria RDT.jfif', 19.8],
-		'Latex Examination Gloves': ['images/latex examination gloves.jfif', 40.5],
-		'White Laboratory Coat': ['images/White Laboratory coat.jfif', 74.7],
-		'Syringe and Needle': ['images/syringe and needle.jfif', 31.5],
-		'Serum Gel Separator Tubes': ['images/Serum gel separator tubes.jfif', 46.8]
+		'Anti Sera ABO Blood Grouping Reagents': ['images/Anti Sera ABO Blood grouping reagents.jfif', 27, 30],
+		'Urine Dipstick': ['images/urine dipstick.jfif', 13.5, 15],
+		'5 Part Hematology Analyzer': ['images/5 part hematology analyzer.jfif', 36818.2, 38756],
+		'Centrifuge': ['images/centrifuge.jfif', 3218.4, 3576],
+		'Bacteria Culture Media': ['images/Bacteria culture media.jfif', 1080, 1200],
+		'Clinical Chemistry Analyzer': ['images/Clinical chemistry analyzer.jfif', 43638.25, 45935],
+		'GeneXpert PCR': ['images/geneXpert PCR.jfif', 34519.2, 36336],
+		'CPDA Blood Transfusion Bag': ['images/CPDA Blood transfusion bag.jfif', 384.3, 427],
+		'HB Electrophoresis Device': ['images/HB electrophoresis device.jfif', 2455.2, 2728],
+		'HIV OraQuick': ['images/HIV Oraquick.jfif', 51.3, 57],
+		'Disposable Nose Masks': ['images/Disposable nose masks.jfif', 40.5, 45],
+		'EDTA Blood Collection Tube': ['images/EDTA blood collection tube.jfif', 57.6, 64],
+		'Hepatitis B Profile Kit': ['images/Hepatitis B profile kit.jfif', 30.6, 34],
+		'Semi-Automated Hematology Analyzer': ['images/Semi-atomatated hematology analyzer.jfif', 9088.65, 9567],
+		'Semi-Automated Chemistry Analyzer': ['images/Semi-automated chemistry analyzer.jfif', 8537.65, 8987],
+		'Zeiss Promorstar Light Microscope': ['images/Zeiss Promorstar light microscope.jfif', 8346.7, 8786],
+		'Giemsa Solution': ['images/giemsa solution.jfif', 43.2, 48],
+		'MicroPipette': ['images/microPipette.jfif', 23.4, 26],
+		'Malaria RDT': ['images/malaria RDT.jfif', 19.8, 22],
+		'Latex Examination Gloves': ['images/latex examination gloves.jfif', 40.5, 45],
+		'White Laboratory Coat': ['images/White Laboratory coat.jfif', 74.7, 83],
+		'Syringe and Needle': ['images/syringe and needle.jfif', 31.5, 35],
+		'Serum Gel Separator Tubes': ['images/Serum gel separator tubes.jfif', 46.8, 52]
 	};
 	const savedProducts = storage.get('joni-products', []);
 	const defaultSettings = { businessName: 'Joni Medtech Supply', phone: '+233 24 969 8992', email: 'onipayedejohn11@gmail.com', location: 'Obuasi, Ashanti Region, Ghana', announcement: '' };
-	const productCatalog = Object.fromEntries(Object.entries(catalog).map(([name, [image, price]]) => [name, { name, image, price, originalPrice: price, discountPercent: 0, description: '', stock: 10 }]));
+	const productCatalog = Object.fromEntries(Object.entries(catalog).map(([name, [image, price, originalPrice]]) => [name, { name, image, price, originalPrice: originalPrice || price, discountPercent: 0, description: '', stock: 10 }]));
 	savedProducts.forEach((product) => { if (product.name) productCatalog[product.name] = { ...productCatalog[product.name], ...product }; });
 	const formatMoney = (amount) => `GH₵${amount.toLocaleString('en-GH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 	const discountPercent = (product) => { const original = Number(product.originalPrice || product.price); const sale = Number(product.price); return Number(product.discountPercent) > 0 ? Number(product.discountPercent) : original > sale ? ((original - sale) / original) * 100 : 0; };
@@ -404,6 +404,144 @@
 		heading.querySelector('.cart-close').addEventListener('click', () => drawer.classList.remove('open'));
 	};
 
+	const reviewStats = new Map();
+	const starGlyphs = (value) => { const filled = Math.max(0, Math.min(5, Math.round(Number(value) || 0))); return '★'.repeat(filled) + '☆'.repeat(5 - filled); };
+
+	let reviewModalRefs = null;
+	const buildReviewModal = () => {
+		if (reviewModalRefs) return reviewModalRefs;
+		const overlay = document.createElement('div');
+		overlay.className = 'review-modal-overlay';
+		overlay.hidden = true;
+		overlay.innerHTML = `<div class="review-modal" role="dialog" aria-modal="true" aria-labelledby="reviewModalTitle"><button type="button" class="review-modal-close" aria-label="Close reviews">×</button><h2 id="reviewModalTitle"></h2><div class="review-summary"><span class="review-summary-stars" aria-hidden="true"></span><span class="review-summary-score"></span><span class="review-summary-count"></span></div><div class="review-form-area"></div><div class="review-list"></div></div>`;
+		document.body.append(overlay);
+		const close = () => { overlay.hidden = true; };
+		overlay.addEventListener('click', (event) => { if (event.target === overlay) close(); });
+		overlay.querySelector('.review-modal-close').addEventListener('click', close);
+		document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !overlay.hidden) close(); });
+		reviewModalRefs = {
+			overlay,
+			title: overlay.querySelector('#reviewModalTitle'),
+			summaryStars: overlay.querySelector('.review-summary-stars'),
+			summaryScore: overlay.querySelector('.review-summary-score'),
+			summaryCount: overlay.querySelector('.review-summary-count'),
+			formArea: overlay.querySelector('.review-form-area'),
+			list: overlay.querySelector('.review-list')
+		};
+		return reviewModalRefs;
+	};
+
+	const renderRatingBadge = (card, name) => {
+		const badge = card?.querySelector('.product-rating');
+		if (!badge) return;
+		const stats = reviewStats.get(name);
+		if (stats?.count) {
+			badge.innerHTML = `<span class="product-rating-stars" aria-hidden="true">${starGlyphs(stats.average)}</span><span class="product-rating-value">${stats.average.toFixed(1)}</span><span class="product-rating-count">(${stats.count})</span>`;
+			badge.setAttribute('aria-label', `${stats.average.toFixed(1)} out of 5 stars from ${stats.count} review${stats.count === 1 ? '' : 's'}. Click to read reviews.`);
+		} else {
+			badge.innerHTML = `<span class="product-rating-stars" aria-hidden="true">☆☆☆☆☆</span><span class="product-rating-count">No reviews yet</span>`;
+			badge.setAttribute('aria-label', 'No reviews yet. Click to write the first review.');
+		}
+	};
+
+	const openReviewModal = async (name) => {
+		const refs = buildReviewModal();
+		refs.title.textContent = name;
+		refs.overlay.hidden = false;
+		refs.summaryStars.textContent = '☆☆☆☆☆';
+		refs.summaryScore.textContent = '';
+		refs.summaryCount.textContent = 'Loading reviews...';
+		refs.formArea.innerHTML = '';
+		refs.list.innerHTML = '';
+
+		const { data: reviews, error } = await supabaseClient.from('reviews').select('user_id, customer_name, rating, comment, created_at').eq('product_name', name).order('created_at', { ascending: false });
+		if (error || !reviews) {
+			refs.summaryCount.textContent = '';
+			refs.list.innerHTML = '<p class="review-empty">We could not load reviews right now. Please try again later.</p>';
+			return;
+		}
+
+		const count = reviews.length;
+		const average = count ? reviews.reduce((sum, item) => sum + Number(item.rating), 0) / count : 0;
+		reviewStats.set(name, { average, count });
+		document.querySelectorAll('.product-item').forEach((card) => { if (productName(card) === name) renderRatingBadge(card, name); });
+
+		refs.summaryStars.textContent = starGlyphs(average);
+		refs.summaryScore.textContent = count ? average.toFixed(1) : 'No ratings yet';
+		refs.summaryCount.textContent = count ? `${count} review${count === 1 ? '' : 's'}` : '';
+		refs.list.innerHTML = count
+			? reviews.map((review) => `<article class="review-row"><div class="review-row-top"><span class="review-row-name">${escapeHtml(review.customer_name || 'Verified customer')}</span><span class="review-row-stars" aria-hidden="true">${starGlyphs(review.rating)}</span></div><div class="review-row-date">${new Date(review.created_at).toLocaleDateString()}</div>${review.comment ? `<p class="review-row-comment">${escapeHtml(review.comment)}</p>` : ''}</article>`).join('')
+			: '<p class="review-empty">No reviews yet. Be the first to review this product.</p>';
+
+		const session = await getAuthenticatedSession();
+		if (!session) {
+			refs.formArea.innerHTML = `<p class="review-signin-note">Please <a href="${authRedirect()}">sign in</a> to leave a review.</p>`;
+			return;
+		}
+
+		const mine = reviews.find((review) => review.user_id === session.user.id);
+		let selected = mine ? Number(mine.rating) : 0;
+		refs.formArea.innerHTML = `<form class="review-form">
+			<div class="review-star-input" role="radiogroup" aria-label="Your rating">${[1, 2, 3, 4, 5].map((value) => `<button type="button" data-value="${value}" aria-label="${value} star${value === 1 ? '' : 's'}" aria-pressed="false">★</button>`).join('')}</div>
+			<textarea name="comment" maxlength="600" placeholder="Share your experience with this product (optional)">${escapeHtml(mine?.comment || '')}</textarea>
+			<button type="submit" class="primary-action">${mine ? 'Update review' : 'Submit review'}</button>
+		</form>`;
+
+		const form = refs.formArea.querySelector('form');
+		const starButtons = [...form.querySelectorAll('.review-star-input button')];
+		const paintStars = (value) => starButtons.forEach((button) => { const active = Number(button.dataset.value) <= value; button.classList.toggle('filled', active); button.setAttribute('aria-pressed', String(active)); });
+		paintStars(selected);
+		starButtons.forEach((button) => {
+			button.addEventListener('mouseenter', () => paintStars(Number(button.dataset.value)));
+			button.addEventListener('mouseleave', () => paintStars(selected));
+			button.addEventListener('click', () => { selected = Number(button.dataset.value); paintStars(selected); });
+		});
+
+		form.addEventListener('submit', async (event) => {
+			event.preventDefault();
+			if (!selected) { showToast('Please choose a star rating'); return; }
+			const submitButton = form.querySelector('button[type="submit"]');
+			submitButton.disabled = true;
+			const { data: profile } = await supabaseClient.from('profiles').select('full_name').eq('id', session.user.id).maybeSingle();
+			const customerName = profile?.full_name || session.user.user_metadata?.full_name || 'Verified customer';
+			const comment = form.comment.value.trim();
+			const { error: submitError } = await supabaseClient.from('reviews').upsert({ product_name: name, user_id: session.user.id, customer_name: customerName, rating: selected, comment }, { onConflict: 'product_name,user_id' });
+			submitButton.disabled = false;
+			if (submitError) { showToast('We could not submit your review. Please try again.'); return; }
+			showToast(mine ? 'Review updated' : 'Review submitted');
+			openReviewModal(name);
+		});
+	};
+
+	const setupReviews = async () => {
+		const productList = document.querySelector('#productList');
+		if (!productList || !supabaseClient) return;
+
+		const cards = [...productList.querySelectorAll('.product-item')];
+		cards.forEach((card) => {
+			const name = productName(card);
+			if (!name || card.querySelector('.product-rating')) return;
+			const badge = document.createElement('button');
+			badge.type = 'button';
+			badge.className = 'product-rating';
+			badge.innerHTML = '<span class="product-rating-stars" aria-hidden="true">☆☆☆☆☆</span><span class="product-rating-count">No reviews yet</span>';
+			badge.addEventListener('click', () => openReviewModal(name));
+			card.querySelector('h2')?.insertAdjacentElement('afterend', badge);
+		});
+
+		const { data, error } = await supabaseClient.from('reviews').select('product_name, rating');
+		if (error || !data) return;
+		const grouped = new Map();
+		data.forEach((row) => {
+			const entry = grouped.get(row.product_name) || { total: 0, count: 0 };
+			entry.total += Number(row.rating);
+			entry.count += 1;
+			grouped.set(row.product_name, entry);
+		});
+		grouped.forEach((entry, name) => reviewStats.set(name, { average: entry.total / entry.count, count: entry.count }));
+		cards.forEach((card) => { const name = productName(card); if (name) renderRatingBadge(card, name); });
+	};
+
 	const setupContactForm = () => {
 		const form = document.querySelector('.contact-form form');
 		if (!form) return;
@@ -493,6 +631,7 @@
 	setupSearch();
 	setupWishlist();
 	setupCart();
+	setupReviews();
 	setupContactForm();
 	setupCommercePages();
 	setupAdmin();

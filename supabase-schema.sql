@@ -78,6 +78,7 @@ create index if not exists order_items_product_id_idx on public.order_items (pro
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
+set search_path = public
 as $$
 begin
     new.updated_at = now();
