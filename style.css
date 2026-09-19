@@ -2221,7 +2221,28 @@ footer {
 
 
     .header-actions {
-        gap: 5px;
+        gap: 4px;
+    }
+
+
+    .header-actions > .header-icon-link,
+    .header-actions > .track-order-link,
+    .header-actions > .theme-toggle {
+        width: 34px;
+        height: 34px;
+        font-size: 18px;
+    }
+
+
+    .header-actions > .nav-toggle {
+        width: 30px;
+        height: 30px;
+        margin-right: 2px;
+    }
+
+
+    .header-actions > .nav-toggle span {
+        width: 18px;
     }
 
 
